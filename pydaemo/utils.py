@@ -20,13 +20,13 @@ def create_header(credentials):
           'Authorization': 'Bearer ' + credentials['access_token']}
 
 
-def make_request(method, url, data, headers):
+def make_request(method, url, data, header):
   """Makes a request.
 
   Args:
     url: The URL to sent the request to.
     data: The data accompanying the request.
-    headers: Headers to be sent along with the request.
+    header: header to be sent along with the request.
 
   Raises:
     HTTPError is the request fails.
@@ -35,36 +35,35 @@ def make_request(method, url, data, headers):
     The response returned from the request.
   """
   if data is None:
-    resp = requests.request(method, url, headers=headers)
+    resp = requests.request(method, url, headers=header)
   else:
-    resp = requests.request(method, url, json=data, headers=headers)
+    resp = requests.request(method, url, json=data, headers=header)
   if not resp.ok:
     resp.raise_for_status()
   return json.loads(resp.content)
 
 
-def delete(url, data, headers):
+def delete(url, header):
   """Makes a DELETE request.
 
   Args:
     url: The URL to request to.
-    data: The data accompanying the DELETE request.
-    headers: Headers to be sent along with the request.
+    header: header to be sent along with the request.
 
   Raises:
     HTTPError is the request fails.
   """
-  requests.request('DELETE', url, headers=headers)
+  requests.request('DELETE', url, headers=header)
 
 
 
-def post(url, data, headers):
+def post(url, data, header):
   """Makes a POST request.
 
   Args:
     url: The URL to post to.
     data: The data accompanying the POST request.
-    headers: Headers to be sent along with the request.
+    header: header to be sent along with the request.
 
   Raises:
     HTTPError is the request fails.
@@ -72,15 +71,15 @@ def post(url, data, headers):
   Returns:
     The response returned from the request.
   """
-  return make_request('POST', url, data, headers)
+  return make_request('POST', url, data, header)
 
 
-def get(url, headers):
+def get(url, header):
   """Makes a GET request.
 
   Args:
     url: The URL to get from.
-    headers: Headers to be sent along with the request.
+    header: header to be sent along with the request.
 
   Raises:
     HTTPError is the request fails.
@@ -88,7 +87,33 @@ def get(url, headers):
   Returns:
     The response returned from the request.
   """
-  return make_request('GET', url, None, headers)
+  return make_request('GET', url, None, header)
+
+
+def get_from_pages(url, header, max_count=None):
+  """Get all the results from a paginated endpoint.
+
+  Args:
+    url: The URL to get from.
+    header: header to be sent along with the request.
+    max_count: Maximum number of results to get.
+
+  Raises:
+    HTTPError is the request fails.
+
+  Returns:
+    The response returned from the request.
+  """
+  results = []
+  total = 0
+  while url is not None:
+    resp = get(url, header)
+    results.extend(resp['results'])
+    url = resp['next']
+    total += resp['count']
+    if max_count is not None and total >= max_count:
+      break
+  return results
 
 
 def load_credentials(location):

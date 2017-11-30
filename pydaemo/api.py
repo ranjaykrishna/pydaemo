@@ -1,6 +1,7 @@
 from .utils import create_header
 from .utils import delete
 from .utils import get
+from .utils import get_from_pages
 from .utils import load_credentials
 from .utils import post
 
@@ -66,22 +67,17 @@ class Daemo(object):
     resp = post(self.url + '/v1/projects/', data, self.header)
     return resp
 
-  def get_projects(self, max_projects=None):
+  def get_projects(self, max_count=None):
     """Lists all the projects created.
+
+    Args:
+      max_count: When set, it only retrieves max_count number of projects.
 
     Returns:
       A list of the projects.
     """
-    total = 0
-    results = []
-    addr = self.url + '/v1/projects/?account_type=requester'
-    while addr is not None:
-      resp = get(addr, self.header)
-      results.extend(resp['results'])
-      total += resp['count']
-      addr = resp['next']
-      if max_projects is not None and total >= max_projects:
-        break
+    results = get_from_pages(self.url + '/v1/projects/?account_type=requester',
+                             self.header, max_count=max_count)
     return results
 
   def get_project(self, project_id):
@@ -102,7 +98,7 @@ class Daemo(object):
     Args:
       project_id: The id of the project to destroy.
     """
-    delete(self.url + '/v1/projects/' + str(project_id) + '/', None, self.header)
+    delete(self.url + '/v1/projects/' + str(project_id) + '/', self.header)
 
   def publish_project(self, project_id):
     """Publishes a project.
@@ -112,22 +108,19 @@ class Daemo(object):
     """
     post(self.url + '/v1/projects/' + str(project_id) + '/publish/', None, self.header)
 
-  def get_tasks(self, project_id, max_tasks=None):
+  def get_tasks(self, project_id, max_count=None):
     """Gets all the tasks for a project.
+
+    Args:
+      project_id: The id of the project who's tasks we want to get.
+      max_count: When set, it only retrieves max_count number of tasks.
 
     Returns:
       A list of tasks.
     """
-    total = 0
-    results = []
-    addr = self.url + '/v1/projects/' + str(project_id) + '/tasks/'
-    while addr is not None:
-      resp = get(addr, self.header)
-      results.extend(resp['results'])
-      total += resp['count']
-      addr = resp['next']
-      if max_projects is not None and total >= max_projects:
-        break
+    results = get_from_pages(
+        self.url + '/v1/projects/' + str(project_id) + '/tasks/',
+        self.header, max_count=max_count)
     return results
 
   def get_tasks(self, project_id):
@@ -178,7 +171,7 @@ class Daemo(object):
     Args:
       task_id: The id of the task to delete.
     """
-    delete(self.url + '/v1/tasks/' + task_id + '/',  None, self.header)
+    delete(self.url + '/v1/tasks/' + task_id + '/',  self.header)
 
   def get_task_results(self, task_id):
     """Get the results for all the assignments for a task.
@@ -189,12 +182,9 @@ class Daemo(object):
     Returns:
       A list of the assignment results.
     """
-    results = []
-    addr = self.url + '/v1/tasks/' + task_id + '/assignment-results/'
-    while addr is not None:
-      resp = get(addr, self.header)
-      results.extend(resp['results'])
-      addr = resp['next']
+    results = get_from_pages(
+        self.url + '/v1/tasks/' + task_id + '/assignment-results/',
+        self.header)
     return results
 
   def get_assignments(self, task_id):
@@ -206,12 +196,9 @@ class Daemo(object):
     Returns:
       A list of assignment resouces.
     """
-    results = []
-    addr = self.url + '/v1/assignments/?task_id=' + task_id
-    while addr is not None:
-      resp = get(addr, self.header)
-      results.extend(resp['results'])
-      addr = resp['next']
+    results = get_from_pages(
+        self.url + '/v1/assignments/?task_id=' + task_id,
+        self.header)
     return results
 
   def get_assignment(self, assignment_id):
@@ -234,6 +221,7 @@ class Daemo(object):
     """
     resp = post(self.url + '/v1/assignments/' + assignment_id + '/approve/',
                 None, self.header)
+    return resp
 
   def return_assignment(self, assignment_id):
     """Return an assignment.
@@ -243,6 +231,7 @@ class Daemo(object):
     """
     resp = post(self.url + '/v1/assignments/' + assignment_id + '/return/',
                 None, self.header)
+    return resp
 
   def reject_assignment(self, assignment_id):
     """Reject an assignment.
@@ -260,12 +249,7 @@ class Daemo(object):
     Returns:
       A list of template resources.
     """
-    results = []
-    addr = self.url + '/v1/templates/'
-    while addr is not None:
-      resp = get(addr, self.header)
-      results.extend(resp['results'])
-      addr = resp['next']
+    results = get_from_pages(self.url + '/v1/templates/', self.header)
     return results
 
   def get_template(self, template_id):
@@ -293,3 +277,94 @@ class Daemo(object):
     data = {'name': name, 'items': items}
     resp = post(self.url + '/v1/templates/', data, self.header)
     return resp['id']
+
+  def get_template_items(self, template_id):
+    """Get all the template_items in a template.
+
+    Args:
+      template_id: The id of the template who's items we want.
+
+    Returns:
+      A list of template item resources.
+    """
+    results = get_from_pages(
+        self.url + '/v1/templates-items/?template_id=' + template_id,
+        self.header)
+    return results
+
+  def get_template_item(self, template_item_id):
+    """Get a specific template item id.
+
+    Args:
+      template_item_id: The id of the template item we want.
+
+    Returns:
+      A template item resource.
+    """
+    resp = get(self.url + '/v1/template-items/' + template_item_id + '/',
+               self.header)
+
+  def create_template_item(self, name, item_type, sub_type, predecessor,
+                           required, template, question_value,
+                           max_length=None, min_length = None,
+                           placeholder=None, src=None,
+                           layout=None, shuffle=None,
+                           options=None):
+    """Creates a template item.
+
+    Args:
+      name: The name of the item.
+      item_type: One of `text, instructions, file_upload, iframe, audio, image,
+        radio, select_list, checkbox`.
+      sub_type: can be `number, text_area and text` if type == `text`.
+      predecessor: The previous template item's id.
+      template: The id of the template that the item belong to.
+      question_value: header to be added at the top of the item.
+      max_length: Optional maximum number of characters that workers can type.
+      min_length: Optional minimum number of characters that workers can type.
+      placeholder: Optional placeholder for `text` field.
+      src: Source for `iframe, audio or image` types.
+      layout: Required for `checkbox, radio or select_list`. One of
+        `row or column`.
+      shuffle: Required True or False for `checkbox, radio or select_list`.
+      options: A list of objects containing `value` and `position` for
+        `checkbox, radio and select_list`.
+
+    Returns:
+      The id of the created template_item.
+    """
+    data = {'name': name,
+            'type': item_type,
+            'sub_type': sub_type,
+            'predecessor': predecessor,
+            'required': required,
+            'template': template,
+            'aux_attributes': {
+              'question': {'value': question_value, 'data_source': None}}}
+    if max_length is not None:
+      data['aux_attributes']['max_length'] = max_length
+    if min_length is not None:
+      data['aux_attributes']['min_length'] = min_length
+    if placeholder is not None:
+      data['aux_attributes']['placeholder'] = placeholder
+    if item_type in ['iframe', 'audio', 'image']:
+      if src is None:
+        raise ValueError('src must NOT be None when type is iframe, audio or image')
+      data['aux_attributes']['src'] = src
+    if item_type in ['checkbox', 'radio', 'select_list']:
+      if layout is None or shuffle is None or options is None:
+        raise ValueError('layout, shuffle and options must be set for checkbox, '
+                         'radio and select_list')
+      data['aux_attributes']['layout'] = layout
+      data['aux_attributes']['shuffle_options'] = shuffle
+      data['aux_attributes']['options'] = options
+    resp = post(self.url + '/v1/template-items/', data, self.header)
+    return resp['id']
+
+  def destroy_template_item(self, template_item_id):
+    """Delete a template item.
+
+    Args:
+      template_item_id: The id of the template item we want to delete.
+    """
+    delete(self.url + '/v1/template-items/' + template_item_id + '/', self.header)
