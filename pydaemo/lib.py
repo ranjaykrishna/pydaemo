@@ -51,7 +51,7 @@ class Daemo(object):
       timeout: Maximum time allocated before expiring the task.
 
     Returns:
-      The response from the request.
+      An object containing the id of the project and the template id.
     """
     if not (isinstance(name, str) and len(name) > 0):
       raise TypeError('\'name\' of project needs to be a non-empty string.')
@@ -163,13 +163,14 @@ class Daemo(object):
       price: optional price of the task. Projects already have a default price.
 
     Returns:
-      An object with the task_id of the newly created task.
+      The task_id of the newly created task.
     """
     data = {'data': data}
     if price is not None:
       data['price'] = price
     resp = post(self.url + '/v1/tasks/?project_id=' + project_id,
                 data, self.header)
+    return resp['id']
 
   def destroy_task(self, task_id):
     """Delete a task.
@@ -252,3 +253,43 @@ class Daemo(object):
     resp = post(self.url + '/v1/assignments/' + assignment_id + '/reject/',
                 None, self.header)
     return resp
+
+  def get_templates(self):
+    """Get all the templates created.
+
+    Returns:
+      A list of template resources.
+    """
+    results = []
+    addr = self.url + '/v1/templates/'
+    while addr is not None:
+      resp = get(addr, self.header)
+      results.extend(resp['results'])
+      addr = resp['next']
+    return results
+
+  def get_template(self, template_id):
+    """Get a specific template.
+
+    Args:
+      template_id: The id of the template we want to get.
+
+    Returns:
+      A template resource.
+    """
+    resp = get(self.url + '/v1/templates/' + template_id + '/', self.header)
+    return resp
+
+  def create_template(self, name, items):
+    """Create a template.
+
+    Args:
+      name: The name of the template.
+      items: a list of template item resources.
+
+    Returns:
+      The template id.
+    """
+    data = {'name': name, 'items': items}
+    resp = post(self.url + '/v1/templates/', data, self.header)
+    return resp['id']
