@@ -1,61 +1,129 @@
 """Contains helper functions for pydaemo.
 """
 
-from requests.auth import HTTPBasicAuth
-from requests_oauthlib import OAuth2Session
-from oauthlib.oauth2 import BackendApplicationClient
-from urllib import parse
-from urllib import request
 
 import json
+import os
+import requests
 
 
-def post(url, data):
+def create_header(credentials):
+  """Creates the header dictionary used in all API calls.
+
+  Args:
+    credentials: An object containing 'access_token'.
+
+  Returns:
+    A dictionary to be used as the header for all API calls.
+  """
+  return {'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + credentials['access_token']}
+
+
+def make_request(method, url, data, headers):
+  """Makes a request.
+
+  Args:
+    url: The URL to sent the request to.
+    data: The data accompanying the request.
+    headers: Headers to be sent along with the request.
+
+  Raises:
+    HTTPError is the request fails.
+
+  Returns:
+    The response returned from the request.
+  """
+  resp = requests.request(method, url, json=data, headers=headers)
+  if not resp.ok:
+    resp.raise_for_status()
+  return json.loads(resp.content)
+
+
+def delete(url, data, headers):
+  """Makes a DELETE request.
+
+  Args:
+    url: The URL to request to.
+    data: The data accompanying the DELETE request.
+    headers: Headers to be sent along with the request.
+
+  Raises:
+    HTTPError is the request fails.
+
+  Returns:
+    The response returned from the request.
+  """
+  return make_request('DELETE', url, data, headers)
+
+
+
+def post(url, data, headers):
   """Makes a POST request.
 
   Args:
     url: The URL to post to.
     data: The data accompanying the POST request.
+    headers: Headers to be sent along with the request.
+
+  Raises:
+    HTTPError is the request fails.
 
   Returns:
     The response returned from the request.
   """
-  data = parse.urlencode(data).encode()
-  req =  request.Request(url, data=data) # this will make the method "POST"
-  resp = request.urlopen(req)
-  return resp
+  return make_request('POST', url, data, headers)
 
 
-def load_credentials(location=None):
+def get(url, data, headers):
+  """Makes a GET request.
+
+  Args:
+    url: The URL to get from.
+    data: The data accompanying the GET request.
+    headers: Headers to be sent along with the request.
+
+  Raises:
+    HTTPError is the request fails.
+
+  Returns:
+    The response returned from the request.
+  """
+  return make_request('GET', url, data, headers)
+
+
+def load_credentials(location):
   """Loads the credentials.
 
   Args:
     location: Path to file that contains the credentials.
+
+  Raises:
+    FileNotFoundError is the credentials don't exit.
 
   Returns:
     An object containing 'client_id', 'access_token' and 'refresh_token'.
   """
   if location is None:
     raise FileNotFoundError('No credential file specified.')
-  elif not os.exists(location):
+  elif not os.path.exists(location):
     raise FileNotFoundError('No such credential file: {}.'.format(location))
   return json.load(open(location, 'r'))
 
 
-def authenticate(url, credentials):
-  """Use the credentials to do a oauth.
+def save_credentials(credentials, location):
+  """Saves the credentials.
 
   Args:
-    url: The url from which to request the token.
-    credentials: An object containing 'client_id' and 'client_secret'.
+    credentials: An object containing 'client_id', 'refresh_token' and
+      'access_token'.
+    location: Path to file to store the credentials.
 
-  Returns:
-    The token returned by server.
+  Raises:
+    FileNotFoundError is the credentials don't exit.
   """
-  auth = HTTPBasicAuth(credentials['client_id'], credentials['client_secret'])
-  client = BackendApplicationClient(client_id=credentials['client_id'])
-  oauth = OAuth2Session(client=client)
-  token = oauth.fetch_token(token_url=url,
-                            client_id=client_id,
-                            client_secret=client_secret)
-  return token
+  if location is None:
+    raise FileNotFoundError('No credential file specified.')
+  elif not os.path.exists(location):
+    raise FileNotFoundError('No such credential file: {}.'.format(location))
+  json.dump(credentials, open(location, 'w'))

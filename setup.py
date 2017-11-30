@@ -27,5 +27,4 @@ setup(name='pydaemo',
           'Topic :: Software Development :: Libraries',
           'Topic :: Software Development :: Libraries :: Python Modules'
       ],
-      include_package_data=True,
-      packages=find_packages())
+      include_package_data=True)

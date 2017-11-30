@@ -1,7 +1,9 @@
 *.DS_Store
+*.json
 *.pyc
 *.swp
-*.json
 
+dist/
 env/
+pydaemo.egg-info/
 temp/*
