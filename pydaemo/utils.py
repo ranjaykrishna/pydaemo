@@ -34,7 +34,10 @@ def make_request(method, url, data, headers):
   Returns:
     The response returned from the request.
   """
-  resp = requests.request(method, url, json=data, headers=headers)
+  if data is None:
+    resp = requests.request(method, url, headers=headers)
+  else:
+    resp = requests.request(method, url, json=data, headers=headers)
   if not resp.ok:
     resp.raise_for_status()
   return json.loads(resp.content)
@@ -50,11 +53,8 @@ def delete(url, data, headers):
 
   Raises:
     HTTPError is the request fails.
-
-  Returns:
-    The response returned from the request.
   """
-  return make_request('DELETE', url, data, headers)
+  requests.request('DELETE', url, headers=headers)
 
 
 

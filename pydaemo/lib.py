@@ -74,9 +74,9 @@ class Daemo(object):
     """
     total = 0
     results = []
-    addr = self.url + '/v1/projects/'
+    addr = self.url + '/v1/projects/?account_type=requester'
     while addr is not None:
-      resp = get(addr, {}, self.header)
+      resp = get(addr, None, self.header)
       results.extend(resp['results'])
       total += resp['count']
       addr = resp['next']
@@ -84,13 +84,25 @@ class Daemo(object):
         break
     return {'count': total, 'results': results}
 
+  def get_project(self, project_id):
+    """Retrieves a particular project.
+
+    Args:
+      project_id: The id of the project.
+
+    Returns:
+      The details of that project.
+    """
+    resp = get(self.url + '/v1/projects/' + project_id + '/', None, self.header)
+    return resp
+
   def destroy_project(self, project_id):
     """Destroys a project.
 
     Args:
       project_id: The id of the project to destroy.
     """
-    delete(self.url + '/v1/projects/' + project_id + '/', {}, self.header)
+    delete(self.url + '/v1/projects/' + str(project_id) + '/', None, self.header)
 
   def publish_project(self, project_id):
     """Publishes a project.
@@ -98,7 +110,7 @@ class Daemo(object):
     Args:
       project_id: The id of the project to publish.
     """
-    post(self.url + '/v1/projects/' + project_id + '/publish/', {}, self.header)
+    post(self.url + '/v1/projects/' + str(project_id) + '/publish/', None, self.header)
 
   def get_tasks(self, project_id, max_tasks=None):
     """Gets all the tasks for a project.
@@ -108,9 +120,9 @@ class Daemo(object):
     """
     total = 0
     results = []
-    addr = self.url + '/v1/projects/' + project_id + '/tasks/'
+    addr = self.url + '/v1/projects/' + str(project_id) + '/tasks/'
     while addr is not None:
-      resp = get(addr, {}, self.header)
+      resp = get(addr, None, self.header)
       results.extend(resp['results'])
       total += resp['count']
       addr = resp['next']
