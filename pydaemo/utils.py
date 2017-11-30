@@ -75,12 +75,11 @@ def post(url, data, headers):
   return make_request('POST', url, data, headers)
 
 
-def get(url, data, headers):
+def get(url, headers):
   """Makes a GET request.
 
   Args:
     url: The URL to get from.
-    data: The data accompanying the GET request.
     headers: Headers to be sent along with the request.
 
   Raises:
@@ -89,7 +88,7 @@ def get(url, data, headers):
   Returns:
     The response returned from the request.
   """
-  return make_request('GET', url, data, headers)
+  return make_request('GET', url, None, headers)
 
 
 def load_credentials(location):

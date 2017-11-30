@@ -76,7 +76,7 @@ class Daemo(object):
     results = []
     addr = self.url + '/v1/projects/?account_type=requester'
     while addr is not None:
-      resp = get(addr, None, self.header)
+      resp = get(addr, self.header)
       results.extend(resp['results'])
       total += resp['count']
       addr = resp['next']
@@ -93,7 +93,7 @@ class Daemo(object):
     Returns:
       The details of that project.
     """
-    resp = get(self.url + '/v1/projects/' + project_id + '/', None, self.header)
+    resp = get(self.url + '/v1/projects/' + project_id + '/', self.header)
     return resp
 
   def destroy_project(self, project_id):
@@ -122,7 +122,7 @@ class Daemo(object):
     results = []
     addr = self.url + '/v1/projects/' + str(project_id) + '/tasks/'
     while addr is not None:
-      resp = get(addr, None, self.header)
+      resp = get(addr, self.header)
       results.extend(resp['results'])
       total += resp['count']
       addr = resp['next']
@@ -139,7 +139,7 @@ class Daemo(object):
     Returns:
       A list of tasks.
     """
-    resp = get(self.url + '/v1/tasks/?project_id=' + project_id, None, self.header)
+    resp = get(self.url + '/v1/tasks/?project_id=' + project_id, self.header)
     return resp
 
   def get_task(self, task_id):
@@ -151,7 +151,7 @@ class Daemo(object):
     Returns:
       The task resource.
     """
-    resp = get(self.url + '/v1/tasks/' + task_id + '/', None, self.header)
+    resp = get(self.url + '/v1/tasks/' + task_id + '/', self.header)
     return resp
 
   def create_task(self, project_id, data, price=None):
@@ -168,7 +168,8 @@ class Daemo(object):
     data = {'data': data}
     if price is not None:
       data['price'] = price
-    resp = post(self.url + '/v1/tasks/?project_id=' + project_id, data, self.header)
+    resp = post(self.url + '/v1/tasks/?project_id=' + project_id,
+                data, self.header)
 
   def destroy_task(self, task_id):
     """Delete a task.
@@ -190,7 +191,64 @@ class Daemo(object):
     results = []
     addr = self.url + '/v1/tasks/' + task_id + '/assignment-results/'
     while addr is not None:
-      resp = get(addr, None, self.header)
+      resp = get(addr, self.header)
       results.extend(resp['results'])
       addr = resp['next']
     return results
+
+  def get_assignments(self, task_id):
+    """Get all the assignments associated with a task.
+
+    Args:
+      task_id: The id of the task who's assignments we want.
+
+    Returns:
+      A list of assignment resouces.
+    """
+    results = []
+    addr = self.url + '/v1/assignments/?task_id=' + task_id
+    while addr is not None:
+      resp = get(addr, self.header)
+      results.extend(resp['results'])
+      addr = resp['next']
+    return results
+
+  def get_assignment(self, assignment_id):
+    """Get a specific assignment_id.
+
+    Args:
+      assignment_id: The id of the assignment we want to get.
+
+    Returns:
+      An assignment resource.
+    """
+    resp = get(self.url + '/v1/assignments/' + assignment_id + '/', self.header)
+    return resp
+
+  def approve_assignment(self, assignment_id):
+    """Approve an assignment.
+
+    Args:
+      assignment_id: The id of the assignment we want to approve.
+    """
+    resp = post(self.url + '/v1/assignments/' + assignment_id + '/approve/',
+                None, self.header)
+
+  def return_assignment(self, assignment_id):
+    """Return an assignment.
+
+    Args:
+      assignment_id: The id of the assignment we want to return.
+    """
+    resp = post(self.url + '/v1/assignments/' + assignment_id + '/return/',
+                None, self.header)
+
+  def reject_assignment(self, assignment_id):
+    """Reject an assignment.
+
+    Args:
+      assignment_id: The id of the assignment we want to reject.
+    """
+    resp = post(self.url + '/v1/assignments/' + assignment_id + '/reject/',
+                None, self.header)
+    return resp
