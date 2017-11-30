@@ -70,7 +70,7 @@ class Daemo(object):
     """Lists all the projects created.
 
     Returns:
-      An object containing total number of projects and the list of projects.
+      A list of the projects.
     """
     total = 0
     results = []
@@ -82,7 +82,7 @@ class Daemo(object):
       addr = resp['next']
       if max_projects is not None and total >= max_projects:
         break
-    return {'count': total, 'results': results}
+    return results
 
   def get_project(self, project_id):
     """Retrieves a particular project.
@@ -116,7 +116,7 @@ class Daemo(object):
     """Gets all the tasks for a project.
 
     Returns:
-      An object containing total number of tasks and the list of tasks.
+      A list of tasks.
     """
     total = 0
     results = []
@@ -128,4 +128,69 @@ class Daemo(object):
       addr = resp['next']
       if max_projects is not None and total >= max_projects:
         break
-    return {'count': total, 'results': results}
+    return results
+
+  def get_tasks(self, project_id):
+    """Gets all the tasks associated with a project_id.
+
+    Args:
+      project_id: The id of the project to publish.
+
+    Returns:
+      A list of tasks.
+    """
+    resp = get(self.url + '/v1/tasks/?project_id=' + project_id, None, self.header)
+    return resp
+
+  def get_task(self, task_id):
+    """Get a specific task.
+
+    Args:
+      task_id: The id of the task we want to get.
+
+    Returns:
+      The task resource.
+    """
+    resp = get(self.url + '/v1/tasks/' + task_id + '/', None, self.header)
+    return resp
+
+  def create_task(self, project_id, data, price=None):
+    """Creates a new task for a project.
+
+    Args:
+      project_id: The id of the project for which we want to create a task.
+      data: The data associated with this task.
+      price: optional price of the task. Projects already have a default price.
+
+    Returns:
+      An object with the task_id of the newly created task.
+    """
+    data = {'data': data}
+    if price is not None:
+      data['price'] = price
+    resp = post(self.url + '/v1/tasks/?project_id=' + project_id, data, self.header)
+
+  def destroy_task(self, task_id):
+    """Delete a task.
+
+    Args:
+      task_id: The id of the task to delete.
+    """
+    delete(self.url + '/v1/tasks/' + task_id + '/',  None, self.header)
+
+  def get_task_results(self, task_id):
+    """Get the results for all the assignments for a task.
+
+    Args:
+      task_id: The id of the task we want results for.
+
+    Returns:
+      A list of the assignment results.
+    """
+    results = []
+    addr = self.url + '/v1/tasks/' + task_id + '/assignment-results/'
+    while addr is not None:
+      resp = get(addr, None, self.header)
+      results.extend(resp['results'])
+      addr = resp['next']
+    return results
