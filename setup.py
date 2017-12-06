@@ -1,6 +1,9 @@
 from setuptools import setup
 from setuptools import find_packages
 
+if sys.version_info < (3, 0):
+    print('pydaemo requires python version >= 3.x.x', file=sys.stderr)
+    sys.exit(1)
 
 def readme():
     with open('README.md') as f:
@@ -16,6 +19,7 @@ setup(name='pydaemo',
       license='MIT',
       packages=['pydaemo'],
       zip_safe=False,
+      keywords='daemo python api',
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Intended Audience :: Developers',
