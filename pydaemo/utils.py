@@ -20,13 +20,14 @@ def create_header(credentials):
           'Authorization': 'Bearer ' + credentials['access_token']}
 
 
-def make_request(method, url, data, header):
+def make_request(method, url, data, header, verbose=False):
   """Makes a request.
 
   Args:
     url: The URL to sent the request to.
     data: The data accompanying the request.
     header: header to be sent along with the request.
+    verbose: Boolean that prints out helpful comments.
 
   Raises:
     HTTPError is the request fails.
@@ -34,11 +35,15 @@ def make_request(method, url, data, header):
   Returns:
     The response returned from the request.
   """
+  if verbose:
+    print(method, url, data)
   if data is None:
     resp = requests.request(method, url, headers=header)
   else:
     resp = requests.request(method, url, json=data, headers=header)
   if not resp.ok:
+    if verbose:
+      print(resp.content)
     resp.raise_for_status()
   return json.loads(resp.content)
 
@@ -56,14 +61,14 @@ def delete(url, header):
   requests.request('DELETE', url, headers=header)
 
 
-
-def post(url, data, header):
+def post(url, data, header, verbose=False):
   """Makes a POST request.
 
   Args:
     url: The URL to post to.
     data: The data accompanying the POST request.
     header: header to be sent along with the request.
+    verbose: Boolean that prints out helpful comments.
 
   Raises:
     HTTPError is the request fails.
@@ -71,15 +76,16 @@ def post(url, data, header):
   Returns:
     The response returned from the request.
   """
-  return make_request('POST', url, data, header)
+  return make_request('POST', url, data, header, verbose=verbose)
 
 
-def get(url, header):
+def get(url, header, verbose=False):
   """Makes a GET request.
 
   Args:
     url: The URL to get from.
     header: header to be sent along with the request.
+    verbose: Boolean that prints out helpful comments.
 
   Raises:
     HTTPError is the request fails.
@@ -87,16 +93,17 @@ def get(url, header):
   Returns:
     The response returned from the request.
   """
-  return make_request('GET', url, None, header)
+  return make_request('GET', url, None, header, verbose=verbose)
 
 
-def get_from_pages(url, header, max_count=None):
+def get_from_pages(url, header, max_count=None, verbose=False):
   """Get all the results from a paginated endpoint.
 
   Args:
     url: The URL to get from.
     header: header to be sent along with the request.
     max_count: Maximum number of results to get.
+    verbose: Boolean that prints out helpful comments.
 
   Raises:
     HTTPError is the request fails.
@@ -107,7 +114,7 @@ def get_from_pages(url, header, max_count=None):
   results = []
   total = 0
   while url is not None:
-    resp = get(url, header)
+    resp = get(url, header, verbose=verbose)
     results.extend(resp['results'])
     url = resp['next']
     total += resp['count']
