@@ -347,6 +347,7 @@ class Daemo(object):
         radio, select_list, checkbox`.
       sub_type: can be `number, text_area and text` if type == `text`.
       predecessor: The previous template item's id.
+      required: Boolean set to True if this field is required.
       template: The id of the template that the item belong to.
       question_value: header to be added at the top of the item.
       max_length: Optional maximum number of characters that workers can type.

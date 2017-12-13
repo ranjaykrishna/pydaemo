@@ -27,13 +27,13 @@ The first step to use the API is to download your credentials so that you have p
 
 Ensure that the credentials you obtain contain a `client_id`, `access_token` and `refresh_token`. Create and save your credentials in `credentials.json` file. Let's explore the API with two use cases. In the first example below, we will use PyDaemo to create, launch and collect surveys filled in by crowd workers.
 
-### Let's create a simple survey project.
+## Let's create a simple survey project.
 Let's create a simple survey task with 3 questions:
 1. A radio button question.
 2. A text question.
 3. A dynamic question who's question will be filled in dynamically for each task.
 
-The script to automatically create such a task is located here: `scripts/simple_survey.py`.
+The script to automatically create such a task is located here: `tutorials/simple_survey.py`.
 
 First, let's intialize the Daemo's api endpoints.
 ```
@@ -116,14 +116,65 @@ print(response)
 ```
 
 
-### Let's get more advanced task where we ask workers to caption images. 
+## Tutorial: advanced image captioning task. 
+Now, let's try something a little more complicated. Let's create a task where we ask workers to caption an image. First we need a list of urls:
+```
+urls = ['https://cs.stanford.edu/people/rak248/VG_100K/2322397.jpg',
+        'https://cs.stanford.edu/people/rak248/VG_100K/2322398.jpg',
+        'https://cs.stanford.edu/people/rak248/VG_100K/2322399.jpg']
+```
+
+We will initialize Daemo and create a project:
+```
+daemo = Daemo(update_credentials=True)
+project = daemo.create_project(name='Image Captioning Project', price=0.2,
+                               template_name='Image Captioning Template',
+                               verbose=True)
+```
+
+Next, we will create an image field with its `src` set to `{{url}}`. We will pass in different urls when creating individual tasks.
+```
+question_name = 'image'
+question_type = 'image'
+question_subtype = None
+predecessor = None
+required = False
+question = 'An image you need to caption.'
+image = daemo.create_template_item(question_name, question_type,
+                                     question_subtype, predecessor,
+                                     required, project['template_id'],
+                                     '', src='{{url}}',
+                                     verbose=True)
+```
+
+The last item we need to add to the template is a text field where workers will add a caption. This field will be required:
+```
+question_name = 'caption'
+question_type = 'text'
+question_subtype = 'text'
+predecessor = image
+required = True
+question = 'Caption the image.'
+placeholder = 'add your caption here...'
+caption = daemo.create_template_item(question_name, question_type,
+                                     question_subtype, predecessor,
+                                     required, project['template_id'],
+                                     '', placeholder=placeholder,
+```
+
+Let's create the tasks with the individual urls and then publisht the project.
+```
+for url in urls:
+    daemo.create_task(project['id'], {'url': url}, verbose=True)
+daemo.publish_project(project['id'], verbose=True)
+```
+
+
+## Tutorial: getting results and approving work.
 Coming soon.
 
-### How to retrieve the results and approve work.
+## Tutorial: using custom iframes to create tasks.
 Coming soon.
 
-### Tutorial for using custom iframes to create tasks.
-Coming soon.
-
-### Contributing to the repository.
+## Contributing to the repository.
 We gladly welcome contributions that improve the API or even provide additional tutorials that demonstrate how to use PyDaemo. Create a fork of this repository and send a pull request.
